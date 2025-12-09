@@ -113,7 +113,7 @@ def find_supported_python_exe(install_dir: Path, dev: bool) -> List[str]:
     return None
     
 def in_venv() -> bool:
-    return sys.prefix != sys.base_prefix
+    return os.environ.get('VIRTUAL_ENV') is not None
 
 def is_externally_managed() -> bool:
     get_default_scheme = 'get_default_scheme'
@@ -267,10 +267,11 @@ def main() -> None:
         offer_venv: bool = False
         if in_venv():
             # If we are already in a virtual environment, assume that's where the user wants to be
-            python_cmd = get_venv_exe(Path(sys.prefix))
+            venv_path = os.environ.get('VIRTUAL_ENV') or sys.prefix
+            python_cmd = get_venv_exe(Path(venv_path))
             python_path = get_python_path(python_cmd)
             uv_pip_args = ['pip', 'install', '--python', python_path, '--no-index', '-f', str(dist_dir), 'pyghidra']
-            print(f'Using active virtual environment: {sys.prefix}')
+            print(f'Using active virtual environment: {venv_path}')
         elif os.path.isdir(venv_dir):
             # If the Ghidra user settings venv exists, use that
             python_cmd = get_venv_exe(venv_dir)
@@ -312,3 +313,4 @@ def main() -> None:
  
 if __name__ == "__main__":
     main()
+
