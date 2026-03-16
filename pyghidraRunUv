@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+#----------------------------------------
+# PyGhidra launch (uv version)
+#----------------------------------------
+
+# Resolve symbolic link if present and get the directory this script lives in.
+SCRIPT_FILE="$(readlink -f "$0" 2>/dev/null || readlink "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(dirname -- "$SCRIPT_FILE")"
+
+# Since JPype doesn't seem to pick up JDK_JAVA_OPTIONS automatically, include it ourselves
+VMARG_LIST="${JDK_JAVA_OPTIONS}"
+
+# Apply Java options from externally set environment variables
+VMARG_LIST="${VMARG_LIST} ${GHIDRA_JAVA_OPTIONS} ${PYGHIDRA_JAVA_OPTIONS}"
+
+#----------------------------------------
+# Make sure uv is installed
+#----------------------------------------
+UV=uv
+
+if ! command -v "${UV}" >/dev/null 2>&1 ; then
+    echo "uv is not installed."
+    exit 1
+fi
+
+#----------------------------------------
+# Dev mode or production mode?
+#----------------------------------------
+DEV_ARG=
+
+INSTALL_DIR="${SCRIPT_DIR}/.."
+
+if [ ! -d "${INSTALL_DIR}/Ghidra" ]; then
+    DEV_ARG="--dev"
+    INSTALL_DIR="${SCRIPT_DIR}/../../../.."
+fi
+
+#----------------------------------------
+# Launcher script
+#----------------------------------------
+PYGHIDRA_LAUNCHER="${INSTALL_DIR}/Ghidra/Features/PyGhidra/support/pyghidra_launcher_uv.py"
+
+#----------------------------------------
+# Run via uv
+#----------------------------------------
+"${UV}" run "${PYGHIDRA_LAUNCHER}" "${INSTALL_DIR}" ${DEV_ARG} ${VMARG_LIST} "$@"
